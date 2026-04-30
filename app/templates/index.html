@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Accueil{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="hero-card p-5 rounded-4">
+            <h1 class="display-5 fw-bold text-white mb-3">
+                <i class="bi bi-graph-up-arrow"></i> PrixDenrées
+            </h1>
+            <p class="lead text-white-50 mb-4">
+                Cartographie et suivi mensuel des prix des denrées alimentaires de base 
+                dans les marchés informels urbains du Cameroun
+            </p>
+            <div class="d-flex gap-3 flex-wrap">
+                <a href="/collecte" class="btn btn-warning btn-lg">
+                    <i class="bi bi-pencil-square me-2"></i>Collecter des données
+                </a>
+                <a href="/load-sample" class="btn btn-outline-light btn-lg" id="btn-sample">
+                    <i class="bi bi-database-add me-2"></i>Charger données d'exemple
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-geo-alt text-danger"></i> Zone d'étude</h5>
+                <ul class="list-group list-group-flush">
+                    {% for ville in villes[:6] %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        {{ ville }}
+                        <span class="badge bg-primary rounded-pill"><i class="bi bi-shop"></i></span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow feature-card">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px">
+                    <i class="bi bi-pencil-square text-primary fs-4"></i>
+                </div>
+                <h5>Collecte</h5>
+                <p class="text-muted">Saisie manuelle via formulaire ou import CSV/JSON avec aperçu avant validation.</p>
+                <a href="/collecte" class="btn btn-sm btn-outline-primary">Commencer</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow feature-card">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px">
+                    <i class="bi bi-bar-chart text-success fs-4"></i>
+                </div>
+                <h5>Analyse descriptive</h5>
+                <p class="text-muted">Statistiques, histogrammes, boxplots, corrélations, évolution des prix.</p>
+                <a href="/analytics" class="btn btn-sm btn-outline-success">Explorer</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow feature-card">
+            <div class="card-body text-center p-4">
+                <div class="feature-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px">
+                    <i class="bi bi-cpu text-warning fs-4"></i>
+                </div>
+                <h5>Techniques avancées</h5>
+                <p class="text-muted">Régression, ACP, k-means, k-NN, arbre de décision.</p>
+                <a href="/avance" class="btn btn-sm btn-outline-warning">Analyser</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h5><i class="bi bi-basket text-success me-2"></i>Produits suivis</h5>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    {% for produit in produits %}
+                    <span class="badge bg-light text-dark border px-3 py-2">{{ produit }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('btn-sample')?.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Chargement...';
+    try {
+        const resp = await fetch('/load-sample');
+        const data = await resp.json();
+        if (data.status === 'success') {
+            btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>' + data.imported + ' observations chargées';
+            btn.classList.remove('btn-outline-light');
+            btn.classList.add('btn-success');
+        } else {
+            btn.innerHTML = '<i class="bi bi-info-circle me-2"></i>' + (data.message || 'Déjà chargé');
+            btn.classList.remove('btn-outline-light');
+            btn.classList.add('btn-outline-warning');
+        }
+    } catch(err) {
+        btn.innerHTML = 'Erreur';
+        btn.classList.add('btn-danger');
+    }
+    setTimeout(() => { btn.disabled = false; }, 3000);
+});
+</script>
+{% endblock %}

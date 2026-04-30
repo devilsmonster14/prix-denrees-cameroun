@@ -1,0 +1,6 @@
+ville,marche,produit,prix_unitaire,unite_mesure,devise,remarque
+Yaoundé,Mfoundi,Riz local,450,kg,XAF,
+Yaoundé,Mfoundi,Huile de palme,550,litre,XAF,Qualité variable
+Douala,Sandaga,Tomate,600,kg,XAF,
+Douala,New-Bell,Poisson séché,1200,kg,XAF,Rupture partielle
+Bamenda,Main Market,Manioc (tubercule),200,tas,XAF,

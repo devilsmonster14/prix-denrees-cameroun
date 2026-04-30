@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Analyses descriptives{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-bar-chart text-success me-2"></i>Analyses descriptives</h2>
+
+{% if not has_data %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle me-2"></i>Aucune donnée disponible. 
+    <a href="/collecte">Collecter des données</a> ou <a href="/">charger un échantillon</a>.
+</div>
+{% else %}
+
+<div class="alert alert-success">
+    <i class="bi bi-database-check me-2"></i><strong>{{ count }}</strong> observations analysées
+</div>
+
+<!-- Descriptive stats -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Statistiques descriptives</h5>
+    </div>
+    <div class="card-body">
+        {% if description %}
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Variable</th><th>Nombre</th><th>Moyenne</th><th>Écart-type</th>
+                        <th>Min</th><th>25%</th><th>Médiane</th><th>75%</th><th>Max</th>
+                        <th>Asymétrie</th><th>Kurtosis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for col, stats in description.items() %}
+                    <tr>
+                        <td class="fw-bold">{{ col }}</td>
+                        <td>{{ stats.get('count', '') | round(0) | int }}</td>
+                        <td>{{ stats.get('mean', '') | round(1) }}</td>
+                        <td>{{ stats.get('std', '') | round(1) }}</td>
+                        <td>{{ stats.get('min', '') | round(1) }}</td>
+                        <td>{{ stats.get('25%', '') | round(1) }}</td>
+                        <td>{{ stats.get('50%', '') | round(1) }}</td>
+                        <td>{{ stats.get('75%', '') | round(1) }}</td>
+                        <td>{{ stats.get('max', '') | round(1) }}</td>
+                        <td>{{ stats.get('skew', '') | round(2) }}</td>
+                        <td>{{ stats.get('kurtosis', '') | round(2) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Categorical summary -->
+{% if categorical_summary %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-tag me-2"></i>Résumé des variables catégorielles</h5>
+    </div>
+    <div class="card-body">
+        {% for col, info in categorical_summary.items() %}
+        {% if col != 'remarque' and col != 'devise' %}
+        <h6 class="mt-3">{{ col }} <span class="badge bg-secondary">Mode: {{ info.mode }}</span></h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead><tr><th>Valeur</th><th>Fréquence</th></tr></thead>
+                <tbody>
+                    {% for val, freq in info.frequencies.items() %}
+                    <tr><td>{{ val }}</td><td>{{ freq }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Correlation -->
+{% if correlation and correlation.columns %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Matrice de corrélation</h5>
+    </div>
+    <div class="card-body">
+        {% if corr_heatmap %}
+        <div class="text-center">
+            <img src="data:image/svg+xml;base64,{{ corr_heatmap }}" class="img-fluid" alt="Heatmap corrélation">
+        </div>
+        {% endif %}
+        <div class="table-responsive mt-3">
+            <table class="table table-sm table-bordered">
+                <thead><tr><th></th>
+                    {% for c in correlation.columns %}<th>{{ c }}</th>{% endfor %}
+                </tr></thead>
+                <tbody>
+                    {% for row_name, row_data in correlation.matrix.items() %}
+                    <tr><td class="fw-bold">{{ row_name }}</td>
+                        {% for c in correlation.columns %}
+                        <td class="{% if row_data[c]|float > 0.5 %}table-success{% elif row_data[c]|float < -0.5 %}table-danger{% endif %}">
+                            {{ row_data[c] | round(2) }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Histograms -->
+{% if histograms %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-bar-chart-steps me-2"></i>Histogrammes</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for h in histograms %}
+            <div class="col-md-6">
+                <div class="text-center">
+                    <img src="data:image/svg+xml;base64,{{ h.image }}" class="img-fluid" alt="Histogramme {{ h.title }}">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Boxplots -->
+{% if boxplots %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-box me-2"></i>Boîtes à moustaches</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for b in boxplots %}
+            <div class="col-md-6">
+                <div class="text-center">
+                    <img src="data:image/svg+xml;base64,{{ b.image }}" class="img-fluid" alt="Boxplot {{ b.title }}">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Categorical plots -->
+{% if cat_plots %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Répartition des variables catégorielles</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for p in cat_plots %}
+            <div class="col-md-6">
+                <div class="text-center">
+                    <img src="data:image/svg+xml;base64,{{ p.image }}" class="img-fluid" alt="{{ p.title }}">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Price evolution -->
+{% if price_evolution %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Évolution des prix par produit</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for p in price_evolution %}
+            <div class="col-md-6">
+                <div class="text-center">
+                    <img src="data:image/svg+xml;base64,{{ p.image }}" class="img-fluid" alt="Évolution {{ p.title }}">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Price by ville -->
+{% if price_by_ville %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Prix moyen par ville</h5>
+    </div>
+    <div class="card-body text-center">
+        <img src="data:image/svg+xml;base64,{{ price_by_ville }}" class="img-fluid" alt="Prix par ville">
+    </div>
+</div>
+{% endif %}
+
+<!-- Price by marche -->
+{% if price_by_marche %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="bi bi-shop me-2"></i>Prix moyen par marché</h5>
+    </div>
+    <div class="card-body text-center">
+        <img src="data:image/svg+xml;base64,{{ price_by_marche }}" class="img-fluid" alt="Prix par marché">
+    </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

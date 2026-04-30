@@ -1,0 +1,70 @@
+:root {
+    --primary-gradient: linear-gradient(135deg, #1a237e 0%, #0d47a1 50%, #01579b 100%);
+    --accent: #ff6f00;
+}
+
+body {
+    background-color: #f5f7fa;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.hero-card {
+    background: var(--primary-gradient);
+    border: none;
+}
+
+.feature-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.3rem;
+    letter-spacing: -0.5px;
+}
+
+.card-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+}
+
+img[src^="data:image/svg+xml"] {
+    max-width: 100%;
+    height: auto;
+}
+
+@media print {
+    .navbar, footer, .btn, .no-print { display: none !important; }
+    .card { border: 1px solid #dee2e6 !important; box-shadow: none !important; }
+    body { background: white; }
+}
+
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: #1976d2;
+    box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.15);
+}

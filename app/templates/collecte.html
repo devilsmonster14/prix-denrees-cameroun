@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Collecte{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-pencil-square text-primary me-2"></i>Collecte de données</h2>
+
+<div class="row g-4">
+    <!-- Manual form -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-input-cursor-text me-2"></i>Saisie manuelle</h5>
+            </div>
+            <div class="card-body p-4">
+                <form id="form-collect" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Ville *</label>
+                            <select name="ville" class="form-select" required>
+                                <option value="">-- Sélectionner --</option>
+                                {% for v in villes %}
+                                <option value="{{ v }}">{{ v }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Ville requise</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Marché *</label>
+                            <input type="text" name="marche" class="form-control" required placeholder="Ex: Mfoundi">
+                            <div class="invalid-feedback">Marché requis</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Produit *</label>
+                            <select name="produit" class="form-select" required>
+                                <option value="">-- Sélectionner --</option>
+                                {% for p in produits %}
+                                <option value="{{ p }}">{{ p }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Produit requis</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Prix unitaire *</label>
+                            <div class="input-group">
+                                <input type="number" name="prix_unitaire" class="form-control" required min="1" step="1" placeholder="0">
+                                <span class="input-group-text">XAF</span>
+                            </div>
+                            <div class="invalid-feedback">Prix > 0 requis</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Unité *</label>
+                            <select name="unite_mesure" class="form-select" required>
+                                {% for u in unites %}
+                                <option value="{{ u }}">{{ u }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Remarque</label>
+                            <textarea name="remarque" class="form-control" rows="2" placeholder="Rupture, qualité, affluence..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send me-2"></i>Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <div id="form-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File import -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-up me-2"></i>Import CSV / JSON</h5>
+            </div>
+            <div class="card-body p-4">
+                <form id="form-import">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Fichier (max 10 Mo)</label>
+                        <input type="file" name="file" class="form-control" accept=".csv,.json" required>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="btn-preview" class="btn btn-outline-success">
+                            <i class="bi bi-eye me-1"></i>Aperçu
+                        </button>
+                        <button type="submit" class="btn btn-success" id="btn-import" disabled>
+                            <i class="bi bi-upload me-1"></i>Importer
+                        </button>
+                    </div>
+                </form>
+                <div id="preview-area" class="mt-3"></div>
+                <div id="import-result" class="mt-3"></div>
+
+                <hr class="my-4">
+                <h6><i class="bi bi-info-circle me-1"></i>Format attendu</h6>
+                <small class="text-muted">
+                    Colonnes requises : <code>ville</code>, <code>marche</code>, <code>produit</code>, 
+                    <code>prix_unitaire</code>, <code>unite_mesure</code><br>
+                    Optionnelles : <code>devise</code> (défaut: XAF), <code>remarque</code>
+                </small>
+                <div class="mt-3">
+                    <a href="/static/sample_template.csv" class="btn btn-sm btn-outline-secondary" download>
+                        <i class="bi bi-download me-1"></i>Modèle CSV
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Manual form
+document.getElementById('form-collect').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!this.checkValidity()) { this.classList.add('was-validated'); return; }
+    const fd = new FormData(this);
+    const result = document.getElementById('form-result');
+    try {
+        const resp = await fetch('/submit-form', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (data.status === 'success') {
+            result.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>Observation enregistrée (ID: ' + data.id + ')</div>';
+            this.reset();
+            this.classList.remove('was-validated');
+        } else {
+            result.innerHTML = '<div class="alert alert-danger">' + (data.detail || 'Erreur') + '</div>';
+        }
+    } catch(err) {
+        result.innerHTML = '<div class="alert alert-danger">Erreur réseau</div>';
+    }
+});
+
+// Preview
+document.getElementById('btn-preview').addEventListener('click', async function() {
+    const form = document.getElementById('form-import');
+    const fileInput = form.querySelector('input[type=file]');
+    if (!fileInput.files.length) return;
+    const fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    const area = document.getElementById('preview-area');
+    area.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm"></div> Chargement...</div>';
+    try {
+        const resp = await fetch('/import-preview', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (data.preview) {
+            let html = '<div class="table-responsive"><table class="table table-sm table-striped"><thead><tr>';
+            data.columns.forEach(c => html += '<th>' + c + '</th>');
+            html += '</tr></thead><tbody>';
+            data.preview.forEach(row => {
+                html += '<tr>';
+                data.columns.forEach(c => html += '<td>' + (row[c] ?? '') + '</td>');
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            html += '<small class="text-muted">' + data.rows + ' lignes détectées (5 premières affichées)</small>';
+            area.innerHTML = html;
+            document.getElementById('btn-import').disabled = false;
+        } else {
+            area.innerHTML = '<div class="alert alert-warning">Aperçu indisponible</div>';
+        }
+    } catch(err) {
+        area.innerHTML = '<div class="alert alert-danger">Erreur lors de l\'aperçu</div>';
+    }
+});
+
+// Import
+document.getElementById('form-import').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fileInput = this.querySelector('input[type=file]');
+    if (!fileInput.files.length) return;
+    const fd = new FormData();
+    fd.append('file', fileInput.files[0]);
+    const result = document.getElementById('import-result');
+    const btn = document.getElementById('btn-import');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Import...';
+    try {
+        const resp = await fetch('/import-file', { method: 'POST', body: fd });
+        const data = await resp.json();
+        if (data.status === 'success') {
+            result.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>' + data.imported + ' observations importées</div>';
+            document.getElementById('preview-area').innerHTML = '';
+            fileInput.value = '';
+        } else {
+            result.innerHTML = '<div class="alert alert-danger">' + (data.detail || 'Erreur') + '</div>';
+        }
+    } catch(err) {
+        result.innerHTML = '<div class="alert alert-danger">Erreur réseau</div>';
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-upload me-1"></i>Importer';
+});
+</script>
+{% endblock %}

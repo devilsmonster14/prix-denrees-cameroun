@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}À propos{% endblock %}
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-info-circle text-primary me-2"></i>À propos</h2>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h4><i class="bi bi-graph-up-arrow text-success me-2"></i>PrixDenrées</h4>
+                <p class="lead">Cartographie et suivi mensuel des prix des denrées alimentaires de base dans les marchés informels urbains du Cameroun</p>
+                
+                <hr>
+                
+                <h5><i class="bi bi-bullseye me-2"></i>Objectif</h5>
+                <p>Cette application permet de <strong>collecter</strong>, <strong>analyser</strong> et <strong>visualiser</strong> les prix des denrées alimentaires dans les marchés informels de villes camerounaises (Yaoundé, Douala, Bamenda, Bafoussam, etc.). Elle offre :</p>
+                <ul>
+                    <li><strong>Collecte de données</strong> via formulaire dynamique (saisie manuelle ou import CSV/JSON)</li>
+                    <li><strong>Analyse descriptive</strong> : statistiques de base, visualisations, tableaux croisés, corrélations</li>
+                    <li><strong>Techniques avancées</strong> : régression linéaire, ACP, k-means, k-NN, arbre de décision</li>
+                </ul>
+
+                <h5 class="mt-4"><i class="bi bi-globe me-2"></i>Justification du thème</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-clipboard-data text-primary fs-3"></i>
+                                <h6 class="mt-2">Collecte simple</h6>
+                                <small>Pas de capteurs coûteux. Un smartphone + formulaire suffisent. Les prix sont publics.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-people text-success fs-3"></i>
+                                <h6 class="mt-2">Utilité sociétale</h6>
+                                <small>L'inflation alimentaire est un enjeu majeur. Ces données aident ménages et pouvoirs publics.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-cpu text-warning fs-3"></i>
+                                <h6 class="mt-2">Manipulable</h6>
+                                <small>Données structurées, géolocalisées et temporelles → compatibles Python, SQL, ML.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mt-4"><i class="bi bi-book me-2"></i>Guide d'utilisation</h5>
+                <div class="accordion" id="guideAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide1">Comment collecter des données ?</button></h2>
+                        <div id="guide1" class="accordion-collapse collapse" data-bs-parent="#guideAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Allez sur la page <strong>Collecte</strong></li>
+                                    <li><strong>Saisie manuelle</strong> : Remplissez le formulaire (ville, marché, produit, prix, unité) et cliquez « Enregistrer »</li>
+                                    <li><strong>Import fichier</strong> : Téléchargez un fichier CSV ou JSON contenant les colonnes requises, prévisualisez-le, puis importez</li>
+                                    <li>Vous pouvez aussi charger des <strong>données d'exemple</strong> depuis la page d'accueil</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide2">Comment lancer les analyses descriptives ?</button></h2>
+                        <div id="guide2" class="accordion-collapse collapse" data-bs-parent="#guideAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Assurez-vous d'avoir des données dans la base</li>
+                                    <li>Allez sur la page <strong>Analyses</strong></li>
+                                    <li>Les statistiques descriptives, histogrammes, boxplots, corrélations et évolutions de prix sont calculés automatiquement</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#guide3">Comment utiliser les modules avancés ?</button></h2>
+                        <div id="guide3" class="accordion-collapse collapse" data-bs-parent="#guideAccordion">
+                            <div class="accordion-body">
+                                <ul>
+                                    <li><strong>Régression linéaire</strong> : Choisissez une variable cible numérique et des variables explicatives, puis exécutez</li>
+                                    <li><strong>ACP</strong> : Sélectionnez les variables numériques (ou toutes) pour réduire la dimension</li>
+                                    <li><strong>K-Means</strong> : Choisissez le nombre de clusters et les variables pour le clustering</li>
+                                    <li><strong>K-NN</strong> : Sélectionnez une variable cible catégorielle et la valeur de k</li>
+                                    <li><strong>Arbre de décision</strong> : Choisissez une variable cible catégorielle pour la classification</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Technologies</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tr><td class="fw-bold">Backend</td><td>FastAPI + Uvicorn</td></tr>
+                    <tr><td class="fw-bold">Frontend</td><td>Bootstrap 5 + JavaScript</td></tr>
+                    <tr><td class="fw-bold">Base de données</td><td>SQLite (SQLAlchemy ORM)</td></tr>
+                    <tr><td class="fw-bold">Analyses</td><td>Pandas, NumPy, SciPy, Scikit-learn</td></tr>
+                    <tr><td class="fw-bold">Visualisations</td><td>Matplotlib, Seaborn</td></tr>
+                    <tr><td class="fw-bold">Validation</td><td>Pydantic</td></tr>
+                    <tr><td class="fw-bold">Templates</td><td>Jinja2</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-link me-2"></i>API</h5>
+            </div>
+            <div class="card-body">
+                <p>Documentation interactive disponible :</p>
+                <a href="/docs" class="btn btn-outline-primary w-100 mb-2" target="_blank">
+                    <i class="bi bi-book me-2"></i>Swagger UI (/docs)
+                </a>
+                <a href="/redoc" class="btn btn-outline-secondary w-100" target="_blank">
+                    <i class="bi bi-file-text me-2"></i>ReDoc (/redoc)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
