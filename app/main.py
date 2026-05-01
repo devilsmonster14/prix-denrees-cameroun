@@ -236,13 +236,20 @@ async def analytics_page(request: Request, db: Session = Depends(get_db)):
     desc = analytics.describe_data(df)
     cat_summary = analytics.categorical_summary(df)
     corr = analytics.correlation_matrix(df)
-    histograms = analytics.plot_histograms(df)
-    boxplots = analytics.plot_boxplots(df)
-    cat_plots = analytics.plot_categorical(df)
-    corr_heatmap = analytics.plot_correlation_heatmap(df)
-    price_evolution = analytics.plot_price_evolution(df)
-    price_by_ville = analytics.plot_price_by_ville(df)
-    price_by_marche = analytics.plot_price_by_marche(df)
+    # Generate each plot independently with error handling
+    def safe_plot(fn, *args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            logger.warning(f"Plot error ({fn.__name__}): {e}")
+            return None
+    histograms = safe_plot(analytics.plot_histograms, df)
+    boxplots = safe_plot(analytics.plot_boxplots, df)
+    cat_plots = safe_plot(analytics.plot_categorical, df)
+    corr_heatmap = safe_plot(analytics.plot_correlation_heatmap, df)
+    price_evolution = safe_plot(analytics.plot_price_evolution, df)
+    price_by_ville = safe_plot(analytics.plot_price_by_ville, df)
+    price_by_marche = safe_plot(analytics.plot_price_by_marche, df)
     numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
     cat_cols = [c for c in df.select_dtypes(include=["object"]).columns if c not in ["remarque", "devise"]]
     return templates.TemplateResponse("analytics.html", {

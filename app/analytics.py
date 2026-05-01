@@ -97,29 +97,47 @@ def plot_histograms(df):
     if df.empty:
         return []
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    images = []
-    for col in numeric_cols:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        sns.histplot(df[col].dropna(), kde=True, ax=ax, color="#2196F3")
-        ax.set_title(f"Distribution de {col}", fontsize=14)
-        ax.set_xlabel(col)
-        ax.set_ylabel("Fréquence")
-        images.append({"title": col, "image": fig_to_base64(fig)})
-    return images
+    if not numeric_cols:
+        return []
+    n = len(numeric_cols)
+    ncols = min(3, n)
+    nrows = (n + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
+    if n == 1:
+        axes = np.array([axes])
+    axes = axes.flatten()
+    for i, col in enumerate(numeric_cols):
+        sns.histplot(df[col].dropna(), kde=True, ax=axes[i], color="#2196F3")
+        axes[i].set_title(f"Distribution de {col}", fontsize=11)
+        axes[i].set_xlabel(col)
+        axes[i].set_ylabel("Fréquence")
+    for j in range(i+1, len(axes)):
+        axes[j].set_visible(False)
+    plt.tight_layout()
+    return [{"title": "Histogrammes", "image": fig_to_base64(fig)}]
 
 
 def plot_boxplots(df):
     if df.empty:
         return []
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    images = []
-    for col in numeric_cols:
-        fig, ax = plt.subplots(figsize=(8, 5))
-        sns.boxplot(x=df[col].dropna(), ax=ax, color="#4CAF50")
-        ax.set_title(f"Boîte à moustaches - {col}", fontsize=14)
-        ax.set_xlabel(col)
-        images.append({"title": col, "image": fig_to_base64(fig)})
-    return images
+    if not numeric_cols:
+        return []
+    n = len(numeric_cols)
+    ncols = min(3, n)
+    nrows = (n + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows))
+    if n == 1:
+        axes = np.array([axes])
+    axes = axes.flatten()
+    for i, col in enumerate(numeric_cols):
+        sns.boxplot(x=df[col].dropna(), ax=axes[i], color="#4CAF50")
+        axes[i].set_title(f"Boîte à moustaches - {col}", fontsize=11)
+        axes[i].set_xlabel(col)
+    for j in range(i+1, len(axes)):
+        axes[j].set_visible(False)
+    plt.tight_layout()
+    return [{"title": "Boxplots", "image": fig_to_base64(fig)}]
 
 
 def plot_categorical(df):
@@ -127,17 +145,25 @@ def plot_categorical(df):
         return []
     cat_cols = df.select_dtypes(include=["object"]).columns.tolist()
     cat_cols = [c for c in cat_cols if c not in ["remarque", "devise"]]
-    images = []
-    for col in cat_cols:
-        fig, ax = plt.subplots(figsize=(10, 6))
-        vc = df[col].value_counts().head(20)
-        sns.barplot(x=vc.values, y=vc.index, ax=ax, palette="viridis")
-        ax.set_title(f"Répartition de {col}", fontsize=14)
-        ax.set_xlabel("Nombre")
-        ax.set_ylabel(col)
-        plt.tight_layout()
-        images.append({"title": col, "image": fig_to_base64(fig)})
-    return images
+    if not cat_cols:
+        return []
+    n = len(cat_cols)
+    ncols = min(2, n)
+    nrows = (n + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(8*ncols, 5*nrows))
+    if n == 1:
+        axes = np.array([axes])
+    axes = axes.flatten()
+    for i, col in enumerate(cat_cols):
+        vc = df[col].value_counts().head(15)
+        sns.barplot(x=vc.values, y=vc.index, ax=axes[i], palette="viridis")
+        axes[i].set_title(f"Répartition de {col}", fontsize=11)
+        axes[i].set_xlabel("Nombre")
+        axes[i].set_ylabel(col)
+    for j in range(i+1, len(axes)):
+        axes[j].set_visible(False)
+    plt.tight_layout()
+    return [{"title": "Catégorielles", "image": fig_to_base64(fig)}]
 
 
 def plot_correlation_heatmap(df):
@@ -158,22 +184,30 @@ def plot_price_evolution(df):
         return []
     df = df.copy()
     df["date"] = pd.to_datetime(df["timestamp"]).dt.to_period("M").astype(str)
-    produits = df["produit"].unique()[:6]
-    images = []
-    for prod in produits:
+    produits = df["produit"].unique()[:4]
+    n = len(produits)
+    if n == 0:
+        return []
+    ncols = min(2, n)
+    nrows = (n + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(8*ncols, 4*nrows))
+    if n == 1:
+        axes = np.array([axes])
+    axes = axes.flatten()
+    for i, prod in enumerate(produits):
         sub = df[df["produit"] == prod]
         if sub.empty:
             continue
-        fig, ax = plt.subplots(figsize=(10, 5))
         grouped = sub.groupby("date")["prix_unitaire"].mean().reset_index()
-        ax.plot(grouped["date"], grouped["prix_unitaire"], marker="o", color="#FF5722")
-        ax.set_title(f"Évolution du prix - {prod}", fontsize=14)
-        ax.set_xlabel("Mois")
-        ax.set_ylabel("Prix moyen (XAF)")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        images.append({"title": prod, "image": fig_to_base64(fig)})
-    return images
+        axes[i].plot(grouped["date"], grouped["prix_unitaire"], marker="o", color="#FF5722")
+        axes[i].set_title(f"Évolution - {prod}", fontsize=11)
+        axes[i].set_xlabel("Mois")
+        axes[i].set_ylabel("Prix (XAF)")
+        axes[i].tick_params(axis='x', rotation=45)
+    for j in range(i+1, len(axes)):
+        axes[j].set_visible(False)
+    plt.tight_layout()
+    return [{"title": "Évolution", "image": fig_to_base64(fig)}]
 
 
 def plot_price_by_ville(df):
