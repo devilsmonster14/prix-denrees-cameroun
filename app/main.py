@@ -408,22 +408,12 @@ async def report_page(request: Request, db: Session = Depends(get_db)):
         return templates.TemplateResponse("report.html", {"request": request, "has_data": False})
     desc = analytics.describe_data(df)
     cat_summary = analytics.categorical_summary(df)
-    corr_heatmap = analytics.plot_correlation_heatmap(df)
-    histograms = analytics.plot_histograms(df)
-    boxplots = analytics.plot_boxplots(df)
-    price_evolution = analytics.plot_price_evolution(df)
-    price_by_ville = analytics.plot_price_by_ville(df)
     return templates.TemplateResponse("report.html", {
         "request": request,
         "has_data": True,
         "count": len(df),
         "description": desc,
         "categorical_summary": cat_summary,
-        "corr_heatmap": corr_heatmap,
-        "histograms": histograms,
-        "boxplots": boxplots,
-        "price_evolution": price_evolution,
-        "price_by_ville": price_by_ville,
         "generated_date": datetime.now().strftime("%d/%m/%Y")
     })
 
