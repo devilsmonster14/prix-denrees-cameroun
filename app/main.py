@@ -236,20 +236,6 @@ async def analytics_page(request: Request, db: Session = Depends(get_db)):
     desc = analytics.describe_data(df)
     cat_summary = analytics.categorical_summary(df)
     corr = analytics.correlation_matrix(df)
-    # Generate each plot independently with error handling
-    def safe_plot(fn, *args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except Exception as e:
-            logger.warning(f"Plot error ({fn.__name__}): {e}")
-            return None
-    histograms = safe_plot(analytics.plot_histograms, df)
-    boxplots = safe_plot(analytics.plot_boxplots, df)
-    cat_plots = safe_plot(analytics.plot_categorical, df)
-    corr_heatmap = safe_plot(analytics.plot_correlation_heatmap, df)
-    price_evolution = safe_plot(analytics.plot_price_evolution, df)
-    price_by_ville = safe_plot(analytics.plot_price_by_ville, df)
-    price_by_marche = safe_plot(analytics.plot_price_by_marche, df)
     numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
     cat_cols = [c for c in df.select_dtypes(include=["object"]).columns if c not in ["remarque", "devise"]]
     return templates.TemplateResponse("analytics.html", {
@@ -259,16 +245,34 @@ async def analytics_page(request: Request, db: Session = Depends(get_db)):
         "description": desc,
         "categorical_summary": cat_summary,
         "correlation": corr,
-        "histograms": histograms,
-        "boxplots": boxplots,
-        "cat_plots": cat_plots,
-        "corr_heatmap": corr_heatmap,
-        "price_evolution": price_evolution,
-        "price_by_ville": price_by_ville,
-        "price_by_marche": price_by_marche,
         "numeric_cols": numeric_cols,
         "cat_cols": cat_cols
     })
+
+
+@app.get("/api/plot/{plot_type}")
+async def api_plot(plot_type: str, db: Session = Depends(get_db)):
+    df = analytics.load_dataframe(db)
+    if df.empty:
+        return {"error": "Aucune donnée"}
+    plot_map = {
+        "histograms": analytics.plot_histograms,
+        "boxplots": analytics.plot_boxplots,
+        "categorical": analytics.plot_categorical,
+        "correlation": analytics.plot_correlation_heatmap,
+        "evolution": analytics.plot_price_evolution,
+        "ville": analytics.plot_price_by_ville,
+        "marche": analytics.plot_price_by_marche,
+    }
+    fn = plot_map.get(plot_type)
+    if not fn:
+        raise HTTPException(status_code=404, detail=f"Plot type '{plot_type}' not found")
+    try:
+        result = fn(df)
+        return {"result": result}
+    except Exception as e:
+        logger.warning(f"Plot error ({plot_type}): {e}")
+        return {"error": str(e)}
 
 
 @app.get("/avance", response_class=HTMLResponse)

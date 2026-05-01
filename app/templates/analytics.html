@@ -86,11 +86,7 @@
         <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Matrice de corrélation</h5>
     </div>
     <div class="card-body">
-        {% if corr_heatmap %}
-        <div class="text-center">
-            <img src="data:image/svg+xml;base64,{{ corr_heatmap }}" class="img-fluid" alt="Heatmap corrélation">
-        </div>
-        {% endif %}
+        <div id="plot-correlation" class="mb-3"><div class="text-center"><div class="spinner-border spinner-border-sm"></div> Chargement...</div></div>
         <div class="table-responsive mt-3">
             <table class="table table-sm table-bordered">
                 <thead><tr><th></th>
@@ -113,109 +109,104 @@
 </div>
 {% endif %}
 
-<!-- Histograms -->
-{% if histograms %}
+<!-- Plots loaded via AJAX -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-success text-white">
         <h5 class="mb-0"><i class="bi bi-bar-chart-steps me-2"></i>Histogrammes</h5>
     </div>
-    <div class="card-body">
-        <div class="row g-3">
-            {% for h in histograms %}
-            <div class="col-md-6">
-                <div class="text-center">
-                    <img src="data:image/svg+xml;base64,{{ h.image }}" class="img-fluid" alt="Histogramme {{ h.title }}">
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+    <div class="card-body" id="plot-histograms"><div class="text-center"><div class="spinner-border spinner-border-sm"></div> Chargement...</div></div>
 </div>
-{% endif %}
 
-<!-- Boxplots -->
-{% if boxplots %}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-danger text-white">
         <h5 class="mb-0"><i class="bi bi-box me-2"></i>Boîtes à moustaches</h5>
     </div>
-    <div class="card-body">
-        <div class="row g-3">
-            {% for b in boxplots %}
-            <div class="col-md-6">
-                <div class="text-center">
-                    <img src="data:image/svg+xml;base64,{{ b.image }}" class="img-fluid" alt="Boxplot {{ b.title }}">
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+    <div class="card-body" id="plot-boxplots"><div class="text-center"><div class="spinner-border spinner-border-sm"></div> Chargement...</div></div>
 </div>
-{% endif %}
 
-<!-- Categorical plots -->
-{% if cat_plots %}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-secondary text-white">
         <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Répartition des variables catégorielles</h5>
     </div>
-    <div class="card-body">
-        <div class="row g-3">
-            {% for p in cat_plots %}
-            <div class="col-md-6">
-                <div class="text-center">
-                    <img src="data:image/svg+xml;base64,{{ p.image }}" class="img-fluid" alt="{{ p.title }}">
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+    <div class="card-body" id="plot-categorical"><div class="text-center"><div class="spinner-border spinner-border-sm"></div> Chargement...</div></div>
 </div>
-{% endif %}
 
-<!-- Price evolution -->
-{% if price_evolution %}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-warning text-dark">
         <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Évolution des prix par produit</h5>
     </div>
-    <div class="card-body">
-        <div class="row g-3">
-            {% for p in price_evolution %}
-            <div class="col-md-6">
-                <div class="text-center">
-                    <img src="data:image/svg+xml;base64,{{ p.image }}" class="img-fluid" alt="Évolution {{ p.title }}">
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+    <div class="card-body" id="plot-evolution"><div class="text-center"><div class="spinner-border spinner-border-sm"></div> Chargement...</div></div>
 </div>
-{% endif %}
 
-<!-- Price by ville -->
-{% if price_by_ville %}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-primary text-white">
         <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Prix moyen par ville</h5>
     </div>
-    <div class="card-body text-center">
-        <img src="data:image/svg+xml;base64,{{ price_by_ville }}" class="img-fluid" alt="Prix par ville">
-    </div>
+    <div class="card-body" id="plot-ville"><div class="text-center"><div class="spinner-border spinner-border-sm"></div> Chargement...</div></div>
 </div>
-{% endif %}
 
-<!-- Price by marche -->
-{% if price_by_marche %}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-dark text-white">
         <h5 class="mb-0"><i class="bi bi-shop me-2"></i>Prix moyen par marché</h5>
     </div>
-    <div class="card-body text-center">
-        <img src="data:image/svg+xml;base64,{{ price_by_marche }}" class="img-fluid" alt="Prix par marché">
-    </div>
+    <div class="card-body" id="plot-marche"><div class="text-center"><div class="spinner-border spinner-border-sm"></div> Chargement...</div></div>
 </div>
-{% endif %}
 
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadPlot(type, containerId) {
+    const container = document.getElementById(containerId);
+    try {
+        const resp = await fetch('/api/plot/' + type);
+        const data = await resp.json();
+        if (data.error) {
+            container.innerHTML = '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>' + data.error + '</div>';
+            return;
+        }
+        const result = data.result;
+        if (!result) {
+            container.innerHTML = '<div class="text-muted">Aucun graphique disponible</div>';
+            return;
+        }
+        // Single image (string base64)
+        if (typeof result === 'string') {
+            container.innerHTML = '<div class="text-center"><img src="data:image/svg+xml;base64,' + result + '" class="img-fluid" alt="' + type + '"></div>';
+            return;
+        }
+        // Array of images
+        if (Array.isArray(result)) {
+            let html = '<div class="row g-3">';
+            for (const item of result) {
+                html += '<div class="col-md-6"><div class="text-center"><img src="data:image/svg+xml;base64,' + item.image + '" class="img-fluid" alt="' + (item.title || type) + '"></div></div>';
+            }
+            html += '</div>';
+            container.innerHTML = html;
+            return;
+        }
+        container.innerHTML = '<div class="text-muted">Format inattendu</div>';
+    } catch(err) {
+        container.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Erreur de chargement</div>';
+    }
+}
+
+// Load plots one by one with a small delay to avoid overloading
+const plots = [
+    ['histograms', 'plot-histograms'],
+    ['boxplots', 'plot-boxplots'],
+    ['categorical', 'plot-categorical'],
+    ['correlation', 'plot-correlation'],
+    ['evolution', 'plot-evolution'],
+    ['ville', 'plot-ville'],
+    ['marche', 'plot-marche'],
+];
+
+(async function() {
+    for (const [type, id] of plots) {
+        await loadPlot(type, id);
+    }
+})();
+</script>
 {% endblock %}
